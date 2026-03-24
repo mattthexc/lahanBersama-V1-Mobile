@@ -9,12 +9,12 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('lahanApp', () => ({
-                // UBAH KE TRUE JIKA INGIN LANGSUNG MASUK DASHBOARD SAAT IMPORT FIGMA
-                isLoggedIn: false, isRegistering: false, username: '', role: 'investor', activeTab: 'marketplace', hasSeenPopup: false,
+                isLoggedIn: true, isRegistering: false, username: 'Ahmad Investor', role: 'investor', activeTab: 'marketplace', hasSeenPopup: false,
+                isEditingDesc: false, editDescText: '',
                 lands: [
-                    { id: 1, owner: 'Bapak Budi', phone: '6281234567890', location: 'Cisarua, Bogor', size: '500 m²', description: 'Lahan subur bekas kebun sayur, cocok untuk tanaman palawija atau buah-buahan cepat panen. Pengairan lancar dari sungai terdekat.', image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', status: 'available', targetFund: 5000000, currentFund: 0, updates: [] },
-                    { id: 2, owner: 'Ibu Siti', phone: '6289876543210', location: 'Lembang, Bandung', size: '1000 m²', description: 'Lahan dataran tinggi, sangat cocok untuk sayuran daun dan tomat. Udara sejuk dan tanah gembur. Akses jalan sudah aspal.', image: 'https://images.unsplash.com/photo-1592982537447-6f2a6a0a38b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', status: 'funded', targetFund: 10000000, currentFund: 10000000, cropType: 'Tomat Cherry (800 bibit)', updates: [{ date: '2026-03-20', text: 'Benih tomat cherry sudah disemai di polybag kecil dan diletakkan di dalam green house mini.'}] },
-                    { id: 3, owner: 'Mang Oleh', phone: '6289876543211', location: 'Garut, Jabar', size: '2000 m²', description: 'Tanah merah sangat gembur, dekat dengan sumber mata air pegunungan. Cocok untuk ditanami cabai atau jagung.', image: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', status: 'available', targetFund: 15000000, currentFund: 3500000, updates: [] }
+                    { id: 1, owner: 'Bapak Budi', phone: '6281234567890', location: 'Cisarua, Bogor', size: '500 m²', description: 'Lahan subur bekas kebun sayur, cocok untuk tanaman palawija.', image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', status: 'available', targetFund: 5000000, currentFund: 0, updates: [] },
+                    { id: 2, owner: 'Ibu Siti', phone: '6289876543210', location: 'Lembang, Bandung', size: '1000 m²', description: 'Lahan dataran tinggi, cocok sayuran daun. Udara sejuk.', image: 'https://images.unsplash.com/photo-1557844352-761f2565b576?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', status: 'funded', targetFund: 10000000, currentFund: 10000000, cropType: 'Tomat Cherry (800 bibit)', updates: [{ date: '2026-03-20', text: 'Benih disemai di polybag.'}] },
+                    { id: 3, owner: 'Mang Oleh', phone: '6289876543211', location: 'Garut, Jabar', size: '2000 m²', description: 'Tanah gembur dekat mata air. Cocok untuk cabai atau jagung.', image: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', status: 'available', targetFund: 15000000, currentFund: 3500000, updates: [] }
                 ],
                 selectedLand: null, showFundModal: false, showAddLandModal: false, showUpdateModal: false, showPaymentModal: false, showFertilizerPopup: false,
                 newLandLoc: '', newLandSize: '', newLandFund: '', newLandDesc: '', newLandPhoto: null, newLandDocs: null,
@@ -27,16 +27,18 @@
                         setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 50);
                         if(!this.selectedLand) { document.getElementById('main-scroll')?.scrollTo(0,0); }
                     });
+                    if(this.role === 'investor' && !this.hasSeenPopup) {
+                        setTimeout(() => { this.showFertilizerPopup = true; this.hasSeenPopup = true; setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 50); }, 1500);
+                    }
                 },
                 login() { 
-                    if(!this.username) this.username = this.isRegistering ? 'Pengguna Baru' : 'Investor Anonim'; 
+                    if(!this.username) this.username = this.isRegistering ? 'Pengguna Baru' : 'Investor'; 
                     this.isLoggedIn = true; 
                     if(this.role === 'investor' && !this.hasSeenPopup) {
                         setTimeout(() => { this.showFertilizerPopup = true; this.hasSeenPopup = true; setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 50); }, 1500);
                     }
                     setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 50); 
                 },
-                loginGoogle() { this.username = 'Google User'; this.login(); },
                 logout() { this.isLoggedIn = false; this.username = ''; this.hasSeenPopup = false; },
                 toggleRole() { this.role = this.role === 'investor' ? 'landowner' : 'investor'; this.activeTab = this.role === 'investor' ? 'marketplace' : 'my-lands'; },
                 openLandDetail(land) { this.selectedLand = land; },
@@ -55,11 +57,11 @@
                         this.lands[landIndex].status = 'funded'; this.lands[landIndex].currentFund = this.paymentAmount;
                         this.lands[landIndex].targetFund = this.paymentAmount > this.lands[landIndex].targetFund ? this.paymentAmount : this.lands[landIndex].targetFund;
                         this.lands[landIndex].cropType = `${cropDetail.name} (${this.quantity} bibit)`;
-                        this.lands[landIndex].updates.unshift({ date: new Date().toISOString().split('T')[0], text: 'Pendanaan berhasil disalurkan. Menunggu persiapan tanam.' });
+                        this.lands[landIndex].updates.unshift({ date: new Date().toISOString().split('T')[0], text: 'Pendanaan berhasil.' });
                         this.selectedLand = null; this.activeTab = 'my-investments';
                     } else if (this.paymentContext === 'fertilizer') {
                         const landIndex = this.lands.findIndex(l => l.id === 2);
-                        this.lands[landIndex].updates.unshift({ date: new Date().toISOString().split('T')[0], text: 'Pemupukan NPK tambahan telah berhasil dilakukan.' });
+                        this.lands[landIndex].updates.unshift({ date: new Date().toISOString().split('T')[0], text: 'Pupuk NPK telah diaplikasikan.' });
                         this.activeTab = 'my-investments';
                     }
                     this.showPaymentModal = false;
@@ -72,20 +74,32 @@
                     });
                     this.showAddLandModal = false; this.newLandLoc = ''; this.newLandSize = ''; this.newLandFund = ''; this.newLandDesc = ''; this.newLandPhoto = null; this.newLandDocs = null;
                 },
+                openUpdateModalFast(land) { this.selectedLand = land; this.showUpdateModal = true; },
                 handleUpdateProgress() {
                     if (!this.updateText) return;
                     const landIndex = this.lands.findIndex(l => l.id === this.selectedLand.id);
                     this.lands[landIndex].updates.unshift({ date: new Date().toISOString().split('T')[0], text: this.updateText });
                     this.showUpdateModal = false; this.updateText = '';
                 },
-                openUpdateModalFast(land) { this.selectedLand = land; this.showUpdateModal = true; }
+                startEditDesc() {
+                    this.editDescText = this.selectedLand.description;
+                    this.isEditingDesc = true;
+                    setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 50);
+                },
+                saveDesc() {
+                    const landIndex = this.lands.findIndex(l => l.id === this.selectedLand.id);
+                    if (landIndex !== -1) {
+                        this.lands[landIndex].description = this.editDescText;
+                        this.selectedLand.description = this.editDescText;
+                    }
+                    this.isEditingDesc = false;
+                }
             }));
         });
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; background-color: #e2e8f0; }
+        ::-webkit-scrollbar { display: none; } body { -ms-overflow-style: none; scrollbar-width: none; background-color: #e2e8f0; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         .slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -119,10 +133,10 @@
             
             <header x-show="!selectedLand" class="bg-white/90 backdrop-blur-xl px-6 py-4 sticky top-0 z-30 border-b border-slate-100 flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg"><i data-lucide="leaf" class="w-5 h-5 text-white"></i></div>
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20"><i data-lucide="leaf" class="w-5 h-5 text-white"></i></div>
                     <div><p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-0.5">Halo,</p><h2 class="text-sm font-black text-slate-800 leading-none" x-text="username"></h2></div>
                 </div>
-                <button @click="toggleRole" class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl text-[10px] font-bold border border-emerald-100 flex items-center gap-1 active:scale-95"><i data-lucide="refresh-cw" class="w-3 h-3"></i> <span x-text="role === 'investor' ? 'Pendana' : 'Petani'"></span></button>
+                <button @click="toggleRole" class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 active:scale-95"><i data-lucide="refresh-cw" class="w-3 h-3"></i> <span x-text="role === 'investor' ? 'Pendana' : 'Petani'"></span></button>
             </header>
 
             <main class="flex-1 overflow-y-auto px-5 pt-6 pb-28" id="main-scroll">
@@ -139,7 +153,7 @@
                                 <div @click="openLandDetail(land)" class="relative h-44 rounded-[1.2rem] overflow-hidden cursor-pointer">
                                     <img :src="land.image" class="w-full h-full object-cover" />
                                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent opacity-80"></div>
-                                    <div class="absolute top-3 right-3"><span :class="land.status === 'available' ? 'bg-white/90 text-emerald-700' : 'bg-blue-500/90 text-white'" class="px-3 py-1 rounded-full text-[10px] font-black shadow-lg backdrop-blur-md" x-text="land.status === 'available' ? 'TERBUKA' : 'BERJALAN'"></span></div>
+                                    <div class="absolute top-3 right-3"><span :class="land.status === 'available' ? 'bg-white/90 text-emerald-700' : 'bg-blue-500/90 text-white'" class="px-3 py-1 rounded-full text-[10px] font-black shadow-lg backdrop-blur-md" x-text="land.status === 'available' ? 'TERBUKA' : 'DIDANAI'"></span></div>
                                     <div class="absolute bottom-3 left-3 right-3"><h3 class="font-bold text-lg text-white line-clamp-1 shadow-sm" x-text="land.owner"></h3><div class="flex items-center gap-1.5 text-[11px] text-slate-200 font-medium mt-1"><i data-lucide="map-pin" class="w-3 h-3"></i> <span x-text="`${land.location} • ${land.size}`"></span></div></div>
                                 </div>
                                 <div class="p-3.5">
@@ -149,7 +163,7 @@
                                     <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mb-2"><div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full" :style="`width: ${(land.currentFund / land.targetFund) * 100}%`"></div></div>
                                     
                                     <template x-if="role === 'landowner' && land.status === 'funded'">
-                                        <button @click.stop="openUpdateModalFast(land)" class="w-full mt-3 bg-emerald-50 text-emerald-700 py-2.5 rounded-xl font-bold text-xs flex justify-center items-center gap-1 border border-emerald-200/50"><i data-lucide="camera" class="w-3.5 h-3.5"></i> Lapor Progres</button>
+                                        <button @click.stop="openUpdateModalFast(land)" class="w-full mt-3 bg-emerald-50 text-emerald-700 py-2.5 rounded-xl font-bold text-xs flex justify-center items-center gap-1 border border-emerald-100"><i data-lucide="camera" class="w-3.5 h-3.5"></i> Lapor Progres</button>
                                     </template>
                                 </div>
                             </div>
@@ -165,44 +179,68 @@
                         <div class="absolute bottom-10 left-6 right-6"><div class="flex items-center gap-2 mb-2"><span :class="selectedLand?.status === 'available' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white'" class="px-3 py-1 rounded-full text-[10px] font-black shadow-lg" x-text="selectedLand?.status === 'available' ? 'TERBUKA' : 'BERJALAN'"></span><span class="flex items-center gap-1 text-xs text-slate-200 font-medium"><i data-lucide="map-pin" class="w-3 h-3"></i> <span x-text="selectedLand?.location"></span></span></div><h1 class="text-3xl font-black text-white tracking-tight mb-1" x-text="`Lahan ${selectedLand?.owner || ''}`"></h1><p class="text-slate-300 text-sm font-medium flex items-center gap-1.5">Luas: <span class="text-white font-bold" x-text="selectedLand?.size"></span></p></div>
                     </div>
                     <div class="relative z-10 bg-[#F8FAFC] -mt-6 rounded-t-[2rem] px-6 py-8 space-y-6">
-                        <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-5"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Dana</p><h2 class="text-3xl font-black text-slate-800 mb-4" x-text="formatRupiah(selectedLand?.targetFund)"></h2><div class="w-full bg-slate-100 rounded-full h-2.5 mb-2"><div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full" :style="`width: ${((selectedLand?.currentFund || 0) / (selectedLand?.targetFund || 1)) * 100}%`"></div></div><div class="flex justify-between text-xs font-bold text-slate-500"><span class="text-emerald-600" x-text="`Terkumpul ${formatRupiah(selectedLand?.currentFund)}`"></span><span>100%</span></div></div>
-                        <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-6"><h3 class="text-base font-black text-slate-800 mb-3 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-slate-400"></i> Detail Lahan</h3><p class="text-slate-600 text-sm leading-relaxed" x-text="selectedLand?.description"></p></div>
-                        <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-6">
-                            <div class="flex justify-between items-center mb-6"><h3 class="text-base font-black text-slate-800 flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-emerald-500"></i> Jurnal Proyek</h3></div>
-                            <div class="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
-                                <template x-if="selectedLand && selectedLand.updates && selectedLand.updates.length > 0">
-                                    <template x-for="(update, idx) in selectedLand.updates" :key="idx"><div class="relative flex items-start gap-4"><div class="w-8 h-8 rounded-full border-4 border-white bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 z-10 mt-0.5"><i data-lucide="check" class="w-3 h-3"></i></div><div class="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100"><time class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5 block" x-text="update.date"></time><p class="text-slate-600 text-xs leading-relaxed font-medium" x-text="update.text"></p></div></div></template>
+                        
+                        <div class="bg-white rounded-[1.5rem] p-5 shadow-sm border border-slate-100">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Target Dana</p><h2 class="text-3xl font-black text-slate-800 mb-4" x-text="formatRupiah(selectedLand?.targetFund)"></h2>
+                            <div class="w-full bg-slate-100 rounded-full h-2.5 mb-2"><div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full" :style="`width: ${((selectedLand?.currentFund || 0) / (selectedLand?.targetFund || 1)) * 100}%`"></div></div>
+                            <div class="flex justify-between text-xs font-bold text-slate-500"><span class="text-emerald-600" x-text="`Terkumpul ${formatRupiah(selectedLand?.currentFund)}`"></span><span>100%</span></div>
+                        </div>
+
+                        <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-base font-black text-slate-800 flex items-center gap-2"><i data-lucide="info" class="w-5 h-5 text-slate-400"></i> Detail Lahan</h3>
+                                <template x-if="role === 'landowner' && ['Saya', username, 'Bapak Budi'].includes(selectedLand?.owner)">
+                                    <button @click="startEditDesc" x-show="!isEditingDesc" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-lg font-bold text-[10px] flex items-center gap-1 border border-emerald-200/50"><i data-lucide="edit-3" class="w-3 h-3"></i> Edit</button>
                                 </template>
-                                <template x-if="!selectedLand?.updates || selectedLand.updates.length === 0"><div class="text-center py-6 relative z-10 pl-6"><p class="text-slate-400 text-xs font-medium italic">Belum ada progres.</p></div></template>
+                            </div>
+                            <div x-show="!isEditingDesc"><p class="text-slate-600 text-sm leading-relaxed" x-text="selectedLand?.description"></p></div>
+                            <div x-show="isEditingDesc" class="space-y-3">
+                                <textarea x-model="editDescText" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm font-medium resize-none"></textarea>
+                                <div class="flex justify-end gap-2"><button @click="isEditingDesc = false" class="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">Batal</button><button @click="saveDesc" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg">Simpan</button></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-base font-black text-slate-800 flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-emerald-500"></i> Jurnal</h3>
+                                <template x-if="role === 'landowner' && selectedLand?.status === 'funded' && ['Saya', username, 'Bapak Budi'].includes(selectedLand?.owner)">
+                                    <button @click="openUpdateModalFast(selectedLand)" class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-bold text-[10px] flex items-center gap-1 border border-emerald-200/50"><i data-lucide="plus-circle" class="w-3 h-3"></i> Tambah</button>
+                                </template>
+                            </div>
+                            <div class="space-y-4 border-l-2 border-slate-100 pl-4">
+                                <template x-if="selectedLand && selectedLand.updates && selectedLand.updates.length > 0">
+                                    <template x-for="(update, idx) in selectedLand.updates" :key="idx">
+                                        <div class="relative"><div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></div><p class="text-[10px] font-black text-emerald-600 mb-0.5" x-text="update.date"></p><p class="text-xs text-slate-600 leading-relaxed font-medium" x-text="update.text"></p></div>
+                                    </template>
+                                </template>
+                                <template x-if="!selectedLand?.updates || selectedLand.updates.length === 0"><p class="text-slate-400 text-xs font-medium italic">Belum ada progres.</p></template>
                             </div>
                         </div>
                     </div>
-                    <div x-show="selectedLand?.status === 'available' && role === 'investor'" class="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-white/90 backdrop-blur-xl border-t border-slate-100 p-4 pb-safe z-50">
-                        <button @click="showFundModal = true" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-base shadow-xl flex justify-center items-center gap-2 transform active:scale-[0.98] transition-all"><i data-lucide="wallet" class="w-5 h-5"></i> Danai Sekarang</button>
+
+                    <div x-show="selectedLand?.status === 'available' && role === 'investor'" class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t p-4 pb-safe z-50">
+                        <button @click="showFundModal = true" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl flex justify-center items-center gap-2 active:scale-95"><i data-lucide="wallet" class="w-5 h-5"></i> Danai Sekarang</button>
                     </div>
                 </div>
             </main>
 
-            <nav x-show="!selectedLand" class="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-white/95 backdrop-blur-2xl border-t border-slate-100/60 pb-safe z-30 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
-                <div class="flex justify-around items-center px-6 py-2">
-                    <button @click="activeTab = 'marketplace'" class="flex flex-col items-center justify-center w-16 h-14 relative"><div :class="activeTab === 'marketplace' ? 'text-emerald-600 scale-110' : 'text-slate-400'" class="transition-all duration-300"><i data-lucide="compass" class="w-6 h-6"></i></div><span :class="activeTab === 'marketplace' ? 'text-emerald-600 font-bold opacity-100' : 'text-transparent opacity-0'" class="text-[10px] mt-1 absolute bottom-1 translate-y-3">Pasar</span></button>
-                    <button x-show="role === 'landowner'" @click="activeTab = 'my-lands'" class="flex flex-col items-center justify-center w-16 h-14 relative"><div :class="activeTab === 'my-lands' ? 'text-emerald-600 scale-110' : 'text-slate-400'" class="transition-all duration-300"><i data-lucide="map" class="w-6 h-6"></i></div><span :class="activeTab === 'my-lands' ? 'text-emerald-600 font-bold opacity-100' : 'text-transparent opacity-0'" class="text-[10px] mt-1 absolute bottom-1 translate-y-3">Lahan</span></button>
-                    <button x-show="role === 'investor'" @click="activeTab = 'my-investments'" class="flex flex-col items-center justify-center w-16 h-14 relative"><div :class="activeTab === 'my-investments' ? 'text-emerald-600 scale-110' : 'text-slate-400'" class="transition-all duration-300"><i data-lucide="pie-chart" class="w-6 h-6"></i></div><span :class="activeTab === 'my-investments' ? 'text-emerald-600 font-bold opacity-100' : 'text-transparent opacity-0'" class="text-[10px] mt-1 absolute bottom-1 translate-y-3">Aset</span></button>
-                    <button @click="logout" class="flex flex-col items-center justify-center w-16 h-14 relative"><div class="text-slate-400 active:text-red-500 transition-all duration-300"><i data-lucide="log-out" class="w-6 h-6"></i></div></button>
-                </div>
+            <nav x-show="!selectedLand" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t pb-safe z-30 rounded-t-3xl flex justify-around p-2">
+                <button @click="activeTab = 'marketplace'" class="flex flex-col items-center w-16 h-12 justify-center"><i data-lucide="compass" :class="activeTab === 'marketplace' ? 'text-emerald-600' : 'text-slate-400'" class="w-6 h-6"></i></button>
+                <button x-show="role === 'landowner'" @click="activeTab = 'my-lands'" class="flex flex-col items-center w-16 h-12 justify-center"><i data-lucide="map" :class="activeTab === 'my-lands' ? 'text-emerald-600' : 'text-slate-400'" class="w-6 h-6"></i></button>
+                <button x-show="role === 'investor'" @click="activeTab = 'my-investments'" class="flex flex-col items-center w-16 h-12 justify-center"><i data-lucide="pie-chart" :class="activeTab === 'my-investments' ? 'text-emerald-600' : 'text-slate-400'" class="w-6 h-6"></i></button>
             </nav>
             
-            <div x-show="showFertilizerPopup" class="fixed inset-0 z-[100] max-w-[430px] mx-auto flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-5">
-                <div class="bg-white rounded-3xl p-6 w-full shadow-2xl text-center relative transform transition-all animate-in zoom-in-95 duration-300">
+            <div x-show="showFertilizerPopup" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-5">
+                <div class="bg-white rounded-[2rem] p-6 w-full shadow-2xl text-center relative animate-in zoom-in-95 duration-300">
                     <button @click="showFertilizerPopup = false" class="absolute top-4 right-4 text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
-                    <div class="mx-auto w-16 h-16 bg-amber-100 text-amber-500 rounded-[1.2rem] flex items-center justify-center mb-5"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
+                    <div class="mx-auto w-16 h-16 bg-amber-100 text-amber-500 rounded-[1.2rem] flex items-center justify-center mb-4"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
                     <h3 class="text-xl font-black text-slate-800 mb-2">Peringatan Perawatan</h3>
                     <p class="text-slate-500 text-xs mb-6 leading-relaxed">Tanaman Tomat Cherry Anda di Lahan Ibu Siti membutuhkan pemupukan NPK segera.</p>
-                    <button @click="openPayment('fertilizer', 250000)" class="w-full bg-amber-500 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/30 active:scale-95 transition-transform">Bayar Sekarang</button>
+                    <button @click="openPayment('fertilizer', 250000)" class="w-full bg-amber-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg active:scale-95">Bayar Sekarang</button>
                 </div>
             </div>
 
-            <div x-show="showPaymentModal" class="fixed inset-0 z-[100] max-w-[430px] mx-auto flex flex-col justify-end" style="display: none;">
+            <div x-show="showPaymentModal" class="fixed inset-0 z-[100] flex flex-col justify-end" style="display: none;">
                 <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showPaymentModal = false"></div>
                 <div class="relative w-full bg-white rounded-t-[2rem] shadow-2xl slide-up flex flex-col max-h-[90vh]">
                     <div class="w-full flex justify-center pt-3 pb-2"><div class="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
@@ -214,49 +252,47 @@
                         </div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-3">Metode Pembayaran</label>
                         <div class="space-y-3 mb-4">
-                            <label :class="paymentMethod === 'qris' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
+                            <label :class="paymentMethod === 'qris' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer transition-all">
                                 <input type="radio" x-model="paymentMethod" value="qris" class="hidden"><div class="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600 mr-3"><i data-lucide="qr-code" class="w-4 h-4"></i></div><span class="font-bold text-sm text-slate-800 flex-1">QRIS</span><div :class="paymentMethod === 'qris' ? 'border-emerald-500' : 'border-slate-300'" class="w-4 h-4 rounded-full border-2 flex items-center justify-center"><div x-show="paymentMethod === 'qris'" class="w-2 h-2 bg-emerald-500 rounded-full"></div></div>
                             </label>
-                            <label :class="paymentMethod === 'ewallet' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
+                            <label :class="paymentMethod === 'ewallet' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer transition-all">
                                 <input type="radio" x-model="paymentMethod" value="ewallet" class="hidden"><div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mr-3"><i data-lucide="smartphone" class="w-4 h-4"></i></div><span class="font-bold text-sm text-slate-800 flex-1">E-Wallet (DANA/OVO)</span><div :class="paymentMethod === 'ewallet' ? 'border-emerald-500' : 'border-slate-300'" class="w-4 h-4 rounded-full border-2 flex items-center justify-center"><div x-show="paymentMethod === 'ewallet'" class="w-2 h-2 bg-emerald-500 rounded-full"></div></div>
                             </label>
-                            <label :class="paymentMethod === 'va' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
+                            <label :class="paymentMethod === 'va' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer transition-all">
                                 <input type="radio" x-model="paymentMethod" value="va" class="hidden"><div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 mr-3"><i data-lucide="building" class="w-4 h-4"></i></div><span class="font-bold text-sm text-slate-800 flex-1">Virtual Account</span><div :class="paymentMethod === 'va' ? 'border-emerald-500' : 'border-slate-300'" class="w-4 h-4 rounded-full border-2 flex items-center justify-center"><div x-show="paymentMethod === 'va'" class="w-2 h-2 bg-emerald-500 rounded-full"></div></div>
                             </label>
                         </div>
                     </div>
                     <div class="p-4 bg-white border-t border-slate-100 pb-safe">
-                        <button @click="processPayment" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm active:bg-slate-800 shadow-xl">Selesaikan Pembayaran</button>
+                        <button @click="processPayment" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm active:scale-95 transition-transform">Selesaikan Pembayaran</button>
                     </div>
                 </div>
             </div>
 
-            <div x-show="showFundModal" class="fixed inset-0 z-[90] max-w-[430px] mx-auto flex flex-col justify-end" style="display: none;">
+            <div x-show="showFundModal" class="fixed inset-0 z-[90] flex flex-col justify-end" style="display: none;">
                 <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showFundModal = false"></div>
-                <div class="relative w-full bg-white rounded-t-[2rem] shadow-2xl slide-up flex flex-col max-h-[90vh]">
+                <div class="relative w-full bg-white rounded-t-[2rem] slide-up flex flex-col max-h-[90vh]">
                     <div class="w-full flex justify-center pt-3 pb-2"><div class="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
-                    <div class="px-6 pb-4 border-b border-slate-100 flex justify-between items-center"><div><h3 class="text-xl font-black text-slate-800">Inisiasi Dana</h3><p class="text-slate-500 text-xs font-medium mt-1">Pilih komoditas tanaman.</p></div><button @click="showFundModal = false" class="bg-slate-100 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+                    <div class="px-6 pb-4 border-b border-slate-100 flex justify-between items-center"><div><h3 class="text-xl font-black text-slate-800">Inisiasi Dana</h3></div><button @click="showFundModal = false" class="bg-slate-100 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button></div>
                     <div class="px-6 py-4 overflow-y-auto flex-1 custom-scrollbar">
                         <div class="space-y-3 mb-6">
                             <template x-for="crop in cropOptions" :key="crop.id">
-                                <label :class="selectedCrop === crop.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer active:scale-[0.98]">
+                                <label :class="selectedCrop === crop.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100'" class="flex items-center p-3.5 border-2 rounded-xl cursor-pointer">
                                     <input type="radio" x-model="selectedCrop" :value="crop.id" class="hidden"><div :class="selectedCrop === crop.id ? 'border-emerald-500' : 'border-slate-300'" class="w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 shrink-0"><div x-show="selectedCrop === crop.id" class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div></div><div class="flex-1"><div class="font-bold text-sm text-slate-800" x-text="crop.name"></div><div class="text-[10px] font-bold text-emerald-600 mt-0.5" x-text="`${formatRupiah(crop.price)}/bibit`"></div></div>
                                 </label>
                             </template>
                         </div>
-                        <template x-if="selectedCrop">
-                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-2"><label class="block text-xs font-bold text-slate-700 mb-2">Jumlah Bibit</label><input type="number" min="1" x-model="quantity" class="w-full border border-slate-200 bg-white rounded-xl p-3 outline-none font-bold text-base" /></div>
-                        </template>
+                        <template x-if="selectedCrop"><div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-2"><label class="block text-xs font-bold text-slate-700 mb-2">Jumlah Bibit</label><input type="number" min="1" x-model="quantity" class="w-full border border-slate-200 bg-white rounded-xl p-3 outline-none font-bold text-base" /></div></template>
                     </div>
                     <div class="p-4 bg-white border-t border-slate-100 pb-safe">
-                        <button @click="openPayment('fund', calculateInvestment())" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl">Lanjut Checkout</button>
+                        <button @click="openPayment('fund', calculateInvestment())" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm active:scale-95">Lanjut Checkout</button>
                     </div>
                 </div>
             </div>
 
-            <div x-show="showAddLandModal" class="fixed inset-0 z-[100] max-w-[430px] mx-auto flex flex-col justify-end" style="display: none;">
+            <div x-show="showAddLandModal" class="fixed inset-0 z-[100] flex flex-col justify-end" style="display: none;">
                 <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showAddLandModal = false"></div>
-                <div class="relative w-full bg-white rounded-t-[2rem] shadow-2xl slide-up flex flex-col max-h-[95vh]">
+                <div class="relative w-full bg-white rounded-t-[2rem] slide-up flex flex-col max-h-[95vh]">
                     <div class="w-full flex justify-center pt-3 pb-2"><div class="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
                     <div class="px-6 pb-4 border-b border-slate-100 flex justify-between items-center"><div><h3 class="text-xl font-black text-slate-800">Daftar Lahan Baru</h3></div><button @click="showAddLandModal = false" class="bg-slate-100 p-2 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button></div>
                     <div class="px-6 py-5 overflow-y-auto flex-1 custom-scrollbar">
@@ -274,13 +310,13 @@
                             <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Deskripsi</label><textarea required x-model="newLandDesc" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none font-medium text-sm resize-none" placeholder="Kondisi tanah..."></textarea></div>
                         </form>
                     </div>
-                    <div class="p-4 bg-white border-t border-slate-100 pb-safe"><button type="submit" form="addLandForm" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl">Publikasi Lahan</button></div>
+                    <div class="p-4 bg-white border-t border-slate-100 pb-safe"><button type="submit" form="addLandForm" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm">Publikasi Lahan</button></div>
                 </div>
             </div>
 
-            <div x-show="showUpdateModal" class="fixed inset-0 z-[100] max-w-[430px] mx-auto flex flex-col justify-end" style="display: none;">
+            <div x-show="showUpdateModal" class="fixed inset-0 z-[100] flex flex-col justify-end" style="display: none;">
                 <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showUpdateModal = false"></div>
-                <div class="relative w-full bg-white rounded-t-[2rem] shadow-2xl slide-up flex flex-col">
+                <div class="relative w-full bg-white rounded-t-[2rem] slide-up flex flex-col">
                     <div class="w-full flex justify-center pt-3 pb-2"><div class="w-12 h-1.5 bg-slate-200 rounded-full"></div></div>
                     <div class="px-6 pb-4 border-b border-slate-100 flex justify-between items-center"><h3 class="text-xl font-black text-slate-800">Lapor Progres</h3><button @click="showUpdateModal = false" class="bg-slate-100 p-2 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button></div>
                     <div class="px-6 py-5">
